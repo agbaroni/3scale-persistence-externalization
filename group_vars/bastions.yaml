@@ -1,0 +1,4 @@
+project:
+  threescale: "3scale"
+directory:
+  backup: backups

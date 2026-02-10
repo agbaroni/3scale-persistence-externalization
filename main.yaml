@@ -1,0 +1,43 @@
+---
+- name: Save the full state of the APIManager instance
+  hosts: bastions
+  tasks:
+    - name: Retrieve APIManager instance information
+      kubernetes.core.k8s_info:
+        api_version: apps.3scale.net/v1alpha1
+        kind: APIManager
+        namespace: "{{ project.threescale }}"
+      register: output
+    - name: Stop if the APIManager instance was not found
+      ansible.builtin.fail:
+        msg: "No APIManager instances found"
+      when: not output.api_found
+    - name: Creating backup directory
+      ansible.builtin.file:
+        path: "{{ directory.backup }}"
+        state: directory
+    - name: Retrieve MySQL Pod information
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Pod
+        label_selectors:
+          - threescale_component_element=mysql
+      register: output
+    - name: Stop if MySQL Pod is not found
+      ansible.builtin.fail:
+        msg: "MySQL Pod not found"
+      when: not output.api_found
+    - debug:
+        var: output.resources[0].metadata.name
+    - name: Extracting database contents
+      kubernetes.core.k8s_exec:
+        command: >
+          bash -c 'export MYSQL_PWD=${MYSQL_ROOT_PASSWORD}; mysqldump --single-transaction -hsystem-mysql -uroot system'
+        namespace: "{{ project.threescale }}"
+        pod: "{{ output.resources[0].metadata.name }}"
+      register: dump
+    - name: Saving database contents locally
+      ansible.builtin.copy:
+        content: "{{ dump.stdout }}"
+        dest: "{{ directory.backup }}/dump.sql"
+      no_log: true

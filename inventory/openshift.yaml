@@ -1,0 +1,5 @@
+all:
+  children:
+    bastions:
+      hosts:
+        bastion0:
