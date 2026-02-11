@@ -2,3 +2,11 @@ project:
   threescale: "3scale"
 directory:
   backup: backups
+external:
+  mysql:
+    database: testdb
+    host: mysql-nodeport.dbms.svc.cluster.local
+    password: root_password_di_test
+    port: 3306
+    test_query: "SELECT 1"
+    user: root
