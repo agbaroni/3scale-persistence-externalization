@@ -1,0 +1,8 @@
+- name: "Scale down the deployment of {{ item.description }}"
+  kubernetes.core.k8s_scale:
+    api_version: v1
+    kind: "{{ item.kind | default('DeploymentConfig', true)  }}"
+    name: "{{ item.name }}"
+    namespace: "{{ item.namespace | default(project.threescale, true) }}"
+    replicas: "{{ replicas }}"
+    wait_timeout: "{{ deployments.scaling_timeout }}"

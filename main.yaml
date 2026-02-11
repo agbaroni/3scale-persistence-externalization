@@ -6,13 +6,11 @@
       ansible.builtin.file:
         path: "{{ directory.backup }}"
         state: directory
-#    - name: Creating backup directory XX
-#      ansible.builtin.file:
-#        path: "{{ directory.backup }}/system"
-#        state: directory
 
 - name: Checking APIManager instance status
   hosts: bastions
+  tags:
+    - qui
   tasks:
     - name: Retrieve APIManager instance information
       kubernetes.core.k8s_info:
@@ -29,65 +27,29 @@
         content: "{{ apimanager_crd.resources[0] | to_yaml }}"
         dest: "{{ directory.backup }}/apimanager.yaml"
       no_log: true
+    - name: xxx
+      set_fact:
+        apimanager: "{{ apimanager_crd.resources[0] }}"
 
 - name: Retrieve information for all pods with persistence
   hosts: bastions
   tasks:
-    - name: Retrieve MySQL Pod information
-      kubernetes.core.k8s_info:
-        api_version: v1
-        kind: Pod
-        label_selectors:
-          - rht.subcomp=system-mysql
-      register: mysql_pod
-    - name: Stop if MySQL Pod is not found
-      ansible.builtin.fail:
-        msg: "MySQL Pod not found"
-      when: not mysql_pod.api_found
-    - name: Retrieve System (app) Pod information
-      kubernetes.core.k8s_info:
-        api_version: v1
-        kind: Pod
-        label_selectors:
-          - rht.subcomp=system-app
-      register: system_app_pod
-    - name: Stop if System (app) Pod is not found
-      ansible.builtin.fail:
-        msg: "System (app) Pod not found"
-      when: not system_app_pod.api_found
-    - name: Retrieve Redis (backend) Pod information
-      kubernetes.core.k8s_info:
-        api_version: v1
-        kind: Pod
-        label_selectors:
-          - rht.subcomp=backend-redis
-      register: backend_redis_pod
-    - name: Stop if Redis (backend) Pod is not found
-      ansible.builtin.fail:
-        msg: "Redis (backend) Pod not found"
-      when: not backend_redis_pod.api_found
-    - name: Retrieve Redis (system) Pod information
-      kubernetes.core.k8s_info:
-        api_version: v1
-        kind: Pod
-        label_selectors:
-          - rht.subcomp=system-redis
-      register: system_redis_pod
-    - name: Stop if Redis (system) Pod is not found
-      ansible.builtin.fail:
-        msg: "Redis (system) Pod not found"
-      when: not system_redis_pod.api_found
-    - name: Retrieve Zync (database) Pod information
-      kubernetes.core.k8s_info:
-        api_version: v1
-        kind: Pod
-        label_selectors:
-          - rht.subcomp=zync-database
-      register: zync_database_pod
-    - name: Stop if Zync (database) Pod is not found
-      ansible.builtin.fail:
-        msg: "Zync (database) Pod not found"
-      when: not zync_database_pod.api_found
+    - name: Creating a variable to store the information
+      ansible.builtin.set_fact:
+        pods: {}
+    - name: Populate the variable with all relevant Pods' information
+      include_tasks: resources.yaml
+      with_items:
+        - key: MySQL
+          label: system-mysql
+        - key: System (app)
+          label: system-app
+        - key: Redis (backend)
+          label: backend-redis
+        - key: Redis (system)
+          label: system-redis
+        - key: Zync (database)
+          label: zync-database
 
 - name: Checking connectivity with external systems
   hosts: bastions
@@ -97,7 +59,7 @@
         command: >
           mysql -u{{ external.mysql.user }} -h {{ external.mysql.host }} -p{{ external.mysql.password }} -e '{{ external.mysql.test_query }};' {{ external.mysql.database }}
         namespace: "{{ project.threescale }}"
-        pod: "{{ mysql_pod.resources[0].metadata.name }}"
+        pod: "{{ pods['MySQL'].metadata.name }}"
       register: query_output
     - name: Stop if the test query fails
       ansible.builtin.fail:
@@ -107,37 +69,147 @@
 - name: Save all information to handle a potential recovery
   hosts: bastions
   tasks:
-    - name: Extracting database contents
-      kubernetes.core.k8s_exec:
-        command: >
-          bash -c 'export MYSQL_PWD=${MYSQL_ROOT_PASSWORD}; mysqldump --single-transaction -hsystem-mysql -uroot system'
-        namespace: "{{ project.threescale }}"
-        pod: "{{ mysql_pod.resources[0].metadata.name }}"
-      register: dump
-    - name: Saving database contents locally
-      ansible.builtin.copy:
-        content: "{{ dump.stdout }}"
-        dest: "{{ directory.backup }}/system-mysql.sql"
-      no_log: true
     - name: Saving System (storage) contents
       kubernetes.core.k8s_cp:
         container: system-master
         local_path: "{{ directory.backup }}"
         namespace: "{{ project.threescale }}"
-        pod: "{{ system_app_pod.resources[0].metadata.name }}"
+        pod: "{{ pods['System (app)'].metadata.name }}"
         remote_path: /opt/system/public/system
         state: from_pod
     - name: Saving Redis (backend) contents
       kubernetes.core.k8s_cp:
         local_path: "{{ directory.backup }}/backend-redis-dump.rdb"
         namespace: "{{ project.threescale }}"
-        pod: "{{ backend_redis_pod.resources[0].metadata.name }}"
+        pod: "{{ pods['Redis (backend)'].metadata.name }}"
         remote_path: /var/lib/redis/data/dump.rdb
         state: from_pod
     - name: Saving Redis (system) contents
       kubernetes.core.k8s_cp:
         local_path: "{{ directory.backup }}/system-redis-dump.rdb"
         namespace: "{{ project.threescale }}"
-        pod: "{{ system_redis_pod.resources[0].metadata.name }}"
+        pod: "{{ pods['Redis (system)'].metadata.name }}"
         remote_path: /var/lib/redis/data/dump.rdb
         state: from_pod
+    - name: Extracting Zync (database) contents
+      kubernetes.core.k8s_exec:
+        command: >
+          bash -c 'pg_dump zync_production'
+        namespace: "{{ project.threescale }}"
+        pod: "{{ pods['Zync (database)'].metadata.name }}"
+      register: zync_dump
+    - name: Saving Zync (database) contents locally
+      ansible.builtin.copy:
+        content: "{{ zync_dump.stdout }}"
+        dest: "{{ directory.backup }}/zync-database.sql"
+      no_log: true
+    - name: Extracting System (database) contents
+      kubernetes.core.k8s_exec:
+        command: >
+          bash -c 'export MYSQL_PWD=${MYSQL_ROOT_PASSWORD}; mysqldump --single-transaction -hsystem-mysql -uroot system'
+        namespace: "{{ project.threescale }}"
+        pod: "{{ pods['MySQL'].metadata.name }}"
+      register: system_dump
+    - name: Saving System (database) contents locally
+      ansible.builtin.copy:
+        content: "{{ system_dump.stdout }}"
+        dest: "{{ directory.backup }}/system-mysql.sql"
+      no_log: true
+    - name: Refactor content to be agnostic of the creator
+      ansible.builtin.replace:
+        path: "{{ directory.backup }}/system-mysql.sql"
+        regexp: "DEFINER=`root`@`%`"
+        replace: ""
+    - name: Saving all ConfigMaps
+      include_tasks: configurations.yaml
+      with_items:
+        - name: system-environment
+          kind: ConfigMap
+        - name: apicast-environment
+          kind: ConfigMap
+    - name: Saving all Secrets
+      include_tasks: configurations.yaml
+      with_items:
+        - name: system-smtp
+          kind: Secret
+        - name: system-seed
+          kind: Secret
+        - name: system-database
+          kind: Secret
+        - name: backend-internal-api
+          kind: Secret
+        - name: system-events-hook
+          kind: Secret
+        - name: system-recaptcha
+          kind: Secret
+        - name: system-redis
+          kind: Secret
+        - name: zync
+          kind: Secret
+        - name: system-master-apicast
+          kind: Secret
+
+- name: Scaling all replicas to zero
+  hosts: bastions
+  tasks:
+    - name: Scale all DeploymentConfigs to zero
+      include_tasks: scaling.yaml
+      vars:
+        replicas: 0
+      with_items: "{{ deployments.elements }}"
+
+- name: Import the dump into the external server
+  hosts: bastions
+  tasks:
+    - name: Import locally saved contents to the external MySQL
+      community.mysql.mysql_db:
+        login_host: "{{ external.mysql.other_host | default(external.mysql.host, true) }}"
+        login_password: "{{ external.mysql.password }}"
+        login_port: "{{ external.mysql.other_port | default(external.mysql.port, true) }}"
+        login_user: "{{ external.mysql.user }}"
+        name: "{{ external.mysql.database }}"
+        state: import
+        target: "{{ directory.backup }}/system-mysql.sql"
+
+- name: Update the connection strings
+  hosts: bastions
+  tasks:
+    - name: Update the connection string to point to the external MySQL
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: system-database
+            namespace: "{{ project.threescale }}"
+          stringData:
+            URL: "mysql2://{{ external.mysql.user }}:{{ external.mysql.password }}@{{ external.mysql.host }}/{{ external.mysql.database }}"
+        state: patched
+
+- name: Updating Operator resources
+  hosts: bastions
+  tasks:
+    - name: "Updating Custom Resource Definition (CRD)"
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: apps.3scale.net/v1alpha1
+          kind: APIManager
+          metadata:
+            name: "{{ apimanager.metadata.name }}"
+            namespace: "{{  project.threescale }}"
+          spec:
+            externalComponents:
+              system:
+                database: true
+        state: patched
+
+- name: Scaling up all replicas
+  hosts: bastions
+  tags:
+    - qui
+  tasks:
+    - name: Scale up all DeploymentConfigs
+      include_tasks: scaling.yaml
+      vars:
+        replicas: 1
+      with_items: "{{ deployments.elements | reverse }}"

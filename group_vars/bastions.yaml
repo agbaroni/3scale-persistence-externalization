@@ -6,7 +6,45 @@ external:
   mysql:
     database: testdb
     host: mysql-nodeport.dbms.svc.cluster.local
+    other_host: 127.0.0.1
     password: root_password_di_test
     port: 3306
     test_query: "SELECT 1"
     user: root
+deployments:
+  scaling_timeout: 30
+  elements:
+    - description: 3scale operator controller manager
+      kind: Deployment
+      name: threescale-operator-controller-manager-v2
+      namespace: openshift-operators
+    - description: APICast (production)
+      name: apicast-production
+    - description: APICast (staging)
+      name: apicast-staging
+    - description: System (app)
+      name: system-app
+    - description: System (sidekiq)
+      name: system-sidekiq
+    - description: Listener (backend)
+      name: backend-listener
+    - description: Worker (backend)
+      name: backend-worker
+    - description: Cron (backend)
+      name: backend-cron
+    - description: Memcache (system)
+      name: system-memcache
+    - description: Redis (system)
+      name: system-redis
+    - description: SearchD (system)
+      name: system-searchd
+    - description: Zync
+      name: zync
+    - description: Zync (queue)
+      name: zync-que
+    - description: Redis (backend)
+      name: backend-redis
+    - description: Zync (database)
+      name: zync-database
+    - description: MySQL (system)
+      name: system-mysql

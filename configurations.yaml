@@ -1,0 +1,11 @@
+- name: "Retrieve {{ item.kind }} '{{ item.name }}' contents"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: "{{ item.kind }}"
+    namespace: "{{ project.threescale }}"
+  register: config_map_data
+- name: "Saving {{ item.kind }} '{{ item.name }}' contents"
+  ansible.builtin.copy:
+    content: "{{ config_map_data.resources[0] | to_yaml }}"
+    dest: "{{ directory.backup }}/{{ item.name }}.yaml"
+  no_log: true

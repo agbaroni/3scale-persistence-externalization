@@ -1,0 +1,14 @@
+- name: "Retrieve {{ item.label }} Pod information"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    label_selectors:
+      - "rht.subcomp={{ item.label }}"
+  register: pod
+- name: "Stop if {{ item.label }} Pod is not found"
+  ansible.builtin.fail:
+    msg: "{{ item.label }} Pod not found"
+  when: not pod.api_found
+- name: "Save Pod {{ item.label }} information"
+  set_fact:
+    pods: "{{ pods | combine({ item.key: pod.resources[0] }) }}"
