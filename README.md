@@ -15,7 +15,7 @@ To run this playbook, the `mysql` command must be present on the machines where 
 
 The configuration resides in the `host_vars` and `group_vars` directories; these define the `bastions` group, which contains all hosts identified as bastions for their respective OpenShift clusters.
 
-### Variabili globali
+### Global variables
 
 Global variables reside in `group_vars/bastions.yaml` and have the following structure:
 
@@ -65,7 +65,7 @@ deployments:
       name: system-mysql
 ```
 
-### Variabili del singolo host
+### Specific host variables
 
 Instance-specific variables for Red Hat 3scale API Management reside in `host_vars/bastion0.yaml` and have the following structure:
 
