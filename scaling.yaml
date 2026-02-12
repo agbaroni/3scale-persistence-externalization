@@ -1,4 +1,4 @@
-- name: "Scale down the deployment of {{ item.description }}"
+- name: "Scale the deployment of {{ item.description }} to {{ replicas }}"
   kubernetes.core.k8s_scale:
     api_version: v1
     kind: "{{ item.kind | default('DeploymentConfig', true)  }}"

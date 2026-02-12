@@ -1,2 +1,26 @@
 ansible_connection: local
 ansible_host: localhost
+project:
+  threescale: "3scale"
+external:
+  mysql:
+    database: testdb
+    host: mysql-nodeport.dbms.svc.cluster.local
+    other_host: 127.0.0.1
+    password: root_password_di_test
+    port: 3306
+    user: root
+  redis:
+    backend:
+      queues:
+        host: valkey0-service.dbms.svc.cluster.local
+        port: 6379
+        password: "Pippo123!"
+      storage:
+        host: valkey1-service.dbms.svc.cluster.local
+        port: 6379
+        password: "Pippo123!"
+    system:
+      host: valkey2-service.dbms.svc.cluster.local
+      port: 6379
+      password: "Pippo123!"

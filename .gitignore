@@ -1,3 +1,4 @@
 backups
 env
-mysql.yaml
+mysql-deployment.yaml
+valkey-deployment.yaml

@@ -9,8 +9,6 @@
 
 - name: Checking APIManager instance status
   hosts: bastions
-  tags:
-    - qui
   tasks:
     - name: Retrieve APIManager instance information
       kubernetes.core.k8s_info:
@@ -27,7 +25,7 @@
         content: "{{ apimanager_crd.resources[0] | to_yaml }}"
         dest: "{{ directory.backup }}/apimanager.yaml"
       no_log: true
-    - name: xxx
+    - name: Saving APIManager instance definition
       set_fact:
         apimanager: "{{ apimanager_crd.resources[0] }}"
 
@@ -185,6 +183,27 @@
           stringData:
             URL: "mysql2://{{ external.mysql.user }}:{{ external.mysql.password }}@{{ external.mysql.host }}/{{ external.mysql.database }}"
         state: patched
+    - name: Updating connection parameters for Redis (system)
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: system-redis
+            namespace: "{{ project.threescale }}"
+          stringData:
+            URL: "redis://:{{ external.redis.system.password }}@{{ external.redis.system.host }}:{{ external.redis.system.port }}"
+    - name: Updating connection parameters for Redis (backend)
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: backend-redis
+            namespace: "{{ project.threescale }}"
+          stringData:
+            REDIS_QUEUES_URL: "redis://:{{ external.redis.backend.queues.password }}@{{ external.redis.backend.queues.host }}:{{ external.redis.backend.queues.port }}"
+            REDIS_STORAGE_URL: "redis://:{{ external.redis.backend.storage.password }}@{{ external.redis.backend.storage.host }}:{{ external.redis.backend.storage.port }}"
 
 - name: Updating Operator resources
   hosts: bastions
@@ -196,20 +215,21 @@
           kind: APIManager
           metadata:
             name: "{{ apimanager.metadata.name }}"
-            namespace: "{{  project.threescale }}"
+            namespace: "{{ project.threescale }}"
           spec:
             externalComponents:
+              backend:
+                redis: true
               system:
                 database: true
+                redis: true
         state: patched
 
 - name: Scaling up all replicas
   hosts: bastions
-  tags:
-    - qui
   tasks:
     - name: Scale up all DeploymentConfigs
       include_tasks: scaling.yaml
       vars:
-        replicas: 1
-      with_items: "{{ deployments.elements | reverse }}"
+        replicas: "{{ item.replicas | default(1, true) }}"
+      with_items: "{{ deployments.elements | rejectattr('name', 'in', ['backend-redis', 'system-mysql', 'system-redis']) | list | reverse }}"

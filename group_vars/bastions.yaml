@@ -1,16 +1,8 @@
-project:
-  threescale: "3scale"
 directory:
   backup: backups
 external:
   mysql:
-    database: testdb
-    host: mysql-nodeport.dbms.svc.cluster.local
-    other_host: 127.0.0.1
-    password: root_password_di_test
-    port: 3306
     test_query: "SELECT 1"
-    user: root
 deployments:
   scaling_timeout: 30
   elements:
@@ -28,6 +20,7 @@ deployments:
       name: system-sidekiq
     - description: Listener (backend)
       name: backend-listener
+      replicas: 2
     - description: Worker (backend)
       name: backend-worker
     - description: Cron (backend)
