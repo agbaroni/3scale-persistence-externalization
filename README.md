@@ -10,6 +10,7 @@ To run this playbook, the `mysql` command must be present on the machines where 
 
 - PyMySQL
 - kubernetes
+- openshift
 
 ## Configuration
 
