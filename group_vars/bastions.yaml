@@ -11,33 +11,48 @@ deployments:
       name: threescale-operator-controller-manager-v2
       namespace: openshift-operators
     - description: APICast (production)
+      kind: Deployment
       name: apicast-production
     - description: APICast (staging)
+      kind: Deployment
       name: apicast-staging
     - description: System (app)
+      kind: Deployment
       name: system-app
     - description: System (sidekiq)
+      kind: Deployment
       name: system-sidekiq
     - description: Listener (backend)
+      kind: Deployment
       name: backend-listener
       replicas: 2
     - description: Worker (backend)
+      kind: Deployment
       name: backend-worker
     - description: Cron (backend)
+      kind: Deployment
       name: backend-cron
     - description: Memcache (system)
+      kind: Deployment
       name: system-memcache
     - description: Redis (system)
+      kind: Deployment
       name: system-redis
     - description: SearchD (system)
+      kind: Deployment
       name: system-searchd
     - description: Zync
+      kind: Deployment
       name: zync
     - description: Zync (queue)
+      kind: Deployment
       name: zync-que
     - description: Redis (backend)
+      kind: Deployment
       name: backend-redis
     - description: Zync (database)
+      kind: Deployment
       name: zync-database
     - description: MySQL (system)
+      kind: Deployment
       name: system-mysql
