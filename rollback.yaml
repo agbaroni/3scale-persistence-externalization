@@ -1,0 +1,60 @@
+- name: Checking APIManager instance status
+  hosts: bastions
+  tasks:
+    - name: Retrieve APIManager instance information
+      kubernetes.core.k8s_info:
+        api_version: apps.3scale.net/v1alpha1
+        kind: APIManager
+        namespace: "{{ project.threescale }}"
+      register: apimanager_crd
+    - name: Stop if the APIManager instance was not found
+      ansible.builtin.fail:
+        msg: "No APIManager instances found"
+      when: not apimanager_crd.api_found
+    - name: Saving APIManager instance definition
+      ansible.builtin.copy:
+        backup: true
+        content: "{{ apimanager_crd.resources[0] | to_yaml }}"
+        dest: "{{ directory.backup }}/apimanager-rb.yaml"
+      no_log: true
+    - name: Saving APIManager instance definition
+      set_fact:
+        apimanager: "{{ apimanager_crd.resources[0] }}"
+
+- name: Scaling all replicas to zero
+  hosts: bastions
+  tasks:
+    - name: Scale all DeploymentConfigs to zero
+      include_tasks: scaling.yaml
+      vars:
+        replicas: 0
+      with_items: "{{ deployments.elements }}"
+
+- name: Updating Operator resources
+  hosts: bastions
+  tasks:
+    - name: "Updating Custom Resource Definition (CRD)"
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: apps.3scale.net/v1alpha1
+          kind: APIManager
+          metadata:
+            name: "{{ apimanager.metadata.name }}"
+            namespace: "{{ project.threescale }}"
+          spec:
+            externalComponents:
+              backend:
+                redis: false
+              system:
+                database: false
+                redis: false
+        state: patched
+
+- name: Scaling up all replicas
+  hosts: bastions
+  tasks:
+    - name: Scale all up DeploymentConfigs
+      include_tasks: scaling.yaml
+      vars:
+        replicas: 1
+      with_items: "{{ deployments.elements }}"

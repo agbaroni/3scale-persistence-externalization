@@ -107,3 +107,11 @@ Once the configuration is customized, you can run the playbook as follows:
 ```bash
 ansible-playbook main.yaml
 ```
+
+## Rolling back the externalization
+
+If you need to revert the persistence externalization, you can run the other playbook as follows:
+
+```bash
+ansible-playbook rollback.yaml
+```
