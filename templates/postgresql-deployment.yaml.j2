@@ -1,0 +1,91 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ external.components.postgresql.name }}
+  labels:
+    app: {{ external.components.postgresql.name }}
+  namespace: {{ external.components.postgresql.project }}
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      deployment: {{ external.components.postgresql.name }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        deployment: {{ external.components.postgresql.name }}
+    spec:
+      containers:
+      - name: {{ external.components.postgresql.name }}
+        image: registry.redhat.io/rhel9/postgresql-15
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: POSTGRESQL_USER
+          value: {{ external.postgresql.user }}
+        - name: POSTGRESQL_PASSWORD
+          value: {{ external.postgresql.password }}
+        - name: POSTGRESQL_DATABASE
+          value: {{ external.postgresql.database }}
+        ports:
+        - containerPort: {{ external.postgresql.port }}
+          protocol: TCP
+        livenessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          successThreshold: 1
+          tcpSocket:
+            port: 5432
+          timeoutSeconds: 1
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -i
+            - -c
+            - psql -h 127.0.0.1 -U $POSTGRESQL_USER -q -d $POSTGRESQL_DATABASE -c 'SELECT 1'
+          failureThreshold: 3
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 5
+        resources:
+          limits:
+            memory: 2Gi
+          requests:
+            cpu: 250m
+            memory: 512Mi
+        volumeMounts:
+        - mountPath: /var/lib/pgsql/data
+          name: data
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      serviceAccountName: postgresql-db-external
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: {{ external.components.postgresql.name }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: {{ external.components.postgresql.name }}
+  name: {{ external.components.postgresql.name }}
+  namespace: {{ external.components.postgresql.project }}
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+  selector:
+    deployment: {{ external.components.postgresql.name }}

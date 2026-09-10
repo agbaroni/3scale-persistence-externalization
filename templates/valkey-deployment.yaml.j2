@@ -1,0 +1,81 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  labels:
+    app: {{ external.components.valkey.name }}
+  name: {{ external.components.valkey.name }}
+  namespace: {{ external.components.valkey.project }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment: {{ external.components.valkey.name }}
+  template:
+    metadata:
+      labels:
+        deployment: {{ external.components.valkey.name }}
+    spec:
+      restartPolicy: Always
+      serviceAccountName: backend-redis-external
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+      securityContext: {}
+      containers:
+        - resources:
+            limits:
+              cpu: '2'
+              memory: 32Gi
+            requests:
+              cpu: '1'
+              memory: 1Gi
+          readinessProbe:
+            exec:
+              command:
+                - container-entrypoint
+                - bash
+                - '-c'
+                - redis-cli set liveness-probe "`date`" | grep OK
+            initialDelaySeconds: 10
+            timeoutSeconds: 1
+            periodSeconds: 30
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          name: backend-redis-external
+          livenessProbe:
+            tcpSocket:
+              port: 6379
+            initialDelaySeconds: 10
+            timeoutSeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          env:
+            - name: REDIS_CONF
+              value: /etc/redis.d/redis.conf
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/redis/data
+            - name: config
+              mountPath: /etc/redis.d/
+          terminationMessagePolicy: File
+          image: 'registry.redhat.io/rhel9/redis-7'
+      serviceAccount: {{ external.components.valkey.name }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ external.components.valkey.name }}
+        - name: config
+          configMap:
+            name: {{ external.components.valkey.name }}
+            items:
+              - key: redis.conf
+                path: redis.conf
+            defaultMode: 420
+      dnsPolicy: ClusterFirst
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600

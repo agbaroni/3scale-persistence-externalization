@@ -122,6 +122,20 @@
         path: "{{ directory.backup }}/system-mysql.sql"
         regexp: "DEFINER=`root`@`%`"
         replace: ""
+    # - name: Extracting SystemApp (database) contents
+    #   kubernetes.core.k8s_exec:
+    #     command: >
+    #       pg_dump -U system -d system -F c -b -v -f /tmp/db_dump.backup
+    #     namespace: "{{ project.threescale }}"
+    #     pod: "{{ pods['PostgreSQL'].metadata.name }}"
+    #   register: system_app_dump
+    # - name: Saving SystemApp (database) contents locally
+    #   kubernetes.core.k8s_cp:
+    #     local_path: "{{ directory.backup }}/db_dump.backup"
+    #     namespace: "{{ project.threescale }}"
+    #     pod: "{{ pods['PostgreSQL'].metadata.name }}"
+    #     remote_path: /tmp/db_dump.backup
+    #     state: from_pod
     - name: Saving all ConfigMaps
       ansible.builtin.include_tasks: configurations.yaml
       with_items:
@@ -160,7 +174,17 @@
         replicas: 0
       with_items: "{{ deployments.elements }}"
 
-- name: Import the dump into the external server
+- name: Creating the external components
+  hosts: bastions
+  tasks:
+    - name: Create all components
+      ansible.builtin.include_tasks: components.yaml
+      when: external.components is defined
+    - name: Restore all components
+      ansible.builtin.include_tasks: restore.yaml
+      when: external.components is defined
+
+- name: Import the MySQL dump into the external server
   hosts: bastions
   tasks:
     - name: Import locally saved contents to the external MySQL
@@ -172,6 +196,7 @@
         name: "{{ external.mysql.database }}"
         state: import
         target: "{{ directory.backup }}/system-mysql.sql"
+      when: external.components is not defined
 
 - name: Update the connection strings
   hosts: bastions

@@ -4,24 +4,47 @@ ansible_python_interpreter: "{{ ansible_playbook_python }}"
 project:
   threescale: "3scale"
 external:
+  components:
+    mysql:
+      name: mysql
+      project: dbms
+      storage:
+        size: 8Gi
+    postgresql:
+      name: postgresql
+      project: dbms
+      storage:
+        size: 4Gi
+    valkey:
+      count: 3
+      name: valkey
+      project: dbms
+      storage:
+        size: 1Gi
   mysql:
     database: testdb
-    host: mysql-nodeport.dbms.svc.cluster.local
+    host: mysql.dbms.svc.cluster.local
     other_host: 127.0.0.1
     password: root_password_di_test
     port: 3306
     user: root
+  postgresql:
+    database: testdb
+    host: postgresql.dbms.svc.cluster.local
+    password: Password123!
+    port: 5432
+    user: user
   redis:
     backend:
       queues:
-        host: valkey0-service.dbms.svc.cluster.local
+        host: valkey0.dbms.svc.cluster.local
         port: 6379
         password: "Pippo123!"
       storage:
-        host: valkey1-service.dbms.svc.cluster.local
+        host: valkey1.dbms.svc.cluster.local
         port: 6379
         password: "Pippo123!"
     system:
-      host: valkey2-service.dbms.svc.cluster.local
+      host: valkey2.dbms.svc.cluster.local
       port: 6379
       password: "Pippo123!"

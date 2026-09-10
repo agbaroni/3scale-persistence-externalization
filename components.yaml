@@ -1,0 +1,44 @@
+# - name: Create the PostgreSQL volume
+#   kubernetes.core.k8s:
+#     state: present
+#     template: "{{ lookup('template', 'postgresql-pvc.yaml.j2') }}"
+
+# - name: Create the PostgreSQL instance
+#   kubernetes.core.k8s:
+#     state: present
+#     template: "{{ lookup('template', 'postgresql-deployment.yaml.j2') }}"
+
+# - name: Create the PostgreSQL service
+#   kubernetes.core.k8s:
+#     state: present
+#     template: "{{ lookup('template', 'postgresql-service.yaml.j2') }}"
+
+- name: Create the MySQL volume
+  kubernetes.core.k8s:
+    state: present
+    template: "{{ lookup('template', 'mysql-pvc.yaml.j2') }}"
+
+- name: Create the MySQL instance
+  kubernetes.core.k8s:
+    state: present
+    template: "{{ lookup('template', 'mysql-deployment.yaml.j2') }}"
+
+- name: Create the MySQL service
+  kubernetes.core.k8s:
+    state: present
+    template: "{{ lookup('template', 'mysql-service.yaml.j2') }}"
+
+- name: Create the Redis volume
+  kubernetes.core.k8s:
+    state: present
+    template: "{{ lookup('template', 'valkey-pvc.yaml.j2') }}"
+
+- name: Create the Redis instance
+  kubernetes.core.k8s:
+    state: present
+    template: "{{ lookup('template', 'valkey-deployment.yaml.j2') }}"
+
+- name: Create the Redis service
+  kubernetes.core.k8s:
+    state: present
+    template: "{{ lookup('template', 'valkey-service.yaml.j2') }}"

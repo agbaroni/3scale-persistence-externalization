@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app: {{ external.components.valkey.name }}
+  name: {{ external.components.valkey.name }}
+  namespace: {{ external.components.valkey.project }}
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ external.components.valkey.storage.size }}
+  volumeMode: Filesystem

@@ -76,6 +76,14 @@ ansible_host: localhost
 project:
   threescale: "3scale" # Name of the namespace where the 3scale instance resides (the Operator may be in a different namespace)
 external:
+  components:
+    mysql:
+      name: mysql
+      project: dbms
+    valkey:
+      count: 3
+      name: valkey
+      project: dbms
   mysql:
     database: some_database
     host: some_mysql_host # MySQL host reachable from OpenShift Pods

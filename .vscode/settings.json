@@ -1,9 +1,20 @@
 {
     "files.associations": {
+        "components.yaml": "ansible",
         "configurations.yaml": "ansible",
         "main.yaml": "ansible",
+        "mysql-deployment.yaml.j2": "ansible-jinja",
+        "mysql-pvc.yaml.j2": "ansible-jinja",
+        "mysql-service.yaml.j2": "ansible-jinja",
+        "postgresql-deployment.yaml.j2": "ansible-jinja",
+        "postgresql-pvc.yaml.j2": "ansible-jinja",
+        "postgresql-service.yaml.j2": "ansible-jinja",
         "resources.yaml": "ansible",
+        "restore.yaml": "ansible",
         "rollback.yaml": "ansible",
-        "scaling.yaml": "ansible"
+        "scaling.yaml": "ansible",
+        "valkey-deployment.yaml.j2": "ansible-jinja",
+        "valkey-pvc.yaml.j2": "ansible-jinja",
+        "valkey-service.yaml.j2": "ansible-jinja"
     }
 }

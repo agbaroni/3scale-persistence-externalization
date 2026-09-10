@@ -1,0 +1,52 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mysql
+  name: {{ external.components.mysql.name }}
+  namespace: {{ external.components.mysql.project }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: {{ external.mysql.password }}
+            - name: MYSQL_DATABASE
+              value: {{ external.mysql.database }}
+            - name: MYSQL_ROOT_HOST
+              value: "%"
+            - name: MYSQL_USER
+              value: {{ external.mysql.user }}
+            - name: MYSQL_PASSWORD
+              value: {{ external.mysql.password }}
+          image: mysql:8.0
+          args:
+            - "--skip-name-resolve"
+            - "--default-authentication-plugin=mysql_native_password"
+            - "--authentication-policy=mysql_native_password"
+          name: mysql
+          ports:
+            - containerPort: 3306
+              name: mysql
+              protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ external.components.mysql.name }}

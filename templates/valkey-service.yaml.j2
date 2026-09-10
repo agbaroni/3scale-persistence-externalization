@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ external.components.valkey.name }}
+spec:
+  selector:
+    app: {{ external.components.valkey.name }}
+  ports:
+    - protocol: TCP
+      port: {{ external.redis.system.port }}
+      targetPort: {{ external.redis.system.port }}
+  type: ClusterIP
