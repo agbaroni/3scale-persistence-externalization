@@ -80,10 +80,19 @@ external:
     mysql:
       name: mysql
       project: dbms
+      storage:
+        size: 8Gi
+    postgresql:
+      name: postgresql
+      project: dbms
+      storage:
+        size: 4Gi
     valkey:
       count: 3
       name: valkey
       project: dbms
+      storage:
+        size: 1Gi
   mysql:
     database: some_database
     host: some_mysql_host # MySQL host reachable from OpenShift Pods
