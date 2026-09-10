@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "configurations.yaml": "ansible",
+        "main.yaml": "ansible",
+        "resources.yaml": "ansible",
+        "rollback.yaml": "ansible",
+        "scaling.yaml": "ansible"
+    }
+}

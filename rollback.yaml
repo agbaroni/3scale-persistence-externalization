@@ -16,16 +16,17 @@
         backup: true
         content: "{{ apimanager_crd.resources[0] | to_yaml }}"
         dest: "{{ directory.backup }}/apimanager-rb.yaml"
+        mode: '0400'
       no_log: true
     - name: Saving APIManager instance definition
-      set_fact:
+      ansible.builtin.set_fact:
         apimanager: "{{ apimanager_crd.resources[0] }}"
 
 - name: Scaling all replicas to zero
   hosts: bastions
   tasks:
     - name: Scale all DeploymentConfigs to zero
-      include_tasks: scaling.yaml
+      ansible.builtin.include_tasks: scaling.yaml
       vars:
         replicas: 0
       with_items: "{{ deployments.elements }}"
@@ -54,7 +55,7 @@
   hosts: bastions
   tasks:
     - name: Scale all up DeploymentConfigs
-      include_tasks: scaling.yaml
+      ansible.builtin.include_tasks: scaling.yaml
       vars:
         replicas: 1
       with_items: "{{ deployments.elements }}"

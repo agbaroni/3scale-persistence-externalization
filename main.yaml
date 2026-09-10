@@ -4,6 +4,7 @@
   tasks:
     - name: Creating backup directory
       ansible.builtin.file:
+        mode: '0400'
         path: "{{ directory.backup }}"
         state: directory
 
@@ -24,9 +25,10 @@
       ansible.builtin.copy:
         content: "{{ apimanager_crd.resources[0] | to_yaml }}"
         dest: "{{ directory.backup }}/apimanager.yaml"
+        mode: '0400'
       no_log: true
     - name: Saving APIManager instance definition
-      set_fact:
+      ansible.builtin.set_fact:
         apimanager: "{{ apimanager_crd.resources[0] }}"
 
 - name: Retrieve information for all pods with persistence
@@ -36,7 +38,7 @@
       ansible.builtin.set_fact:
         pods: {}
     - name: Populate the variable with all relevant Pods' information
-      include_tasks: resources.yaml
+      ansible.builtin.include_tasks: resources.yaml
       with_items:
         - key: MySQL
           label: system-mysql
@@ -100,6 +102,7 @@
       ansible.builtin.copy:
         content: "{{ zync_dump.stdout }}"
         dest: "{{ directory.backup }}/zync-database.sql"
+        mode: '0400'
       no_log: true
     - name: Extracting System (database) contents
       kubernetes.core.k8s_exec:
@@ -112,6 +115,7 @@
       ansible.builtin.copy:
         content: "{{ system_dump.stdout }}"
         dest: "{{ directory.backup }}/system-mysql.sql"
+        mode: '0400'
       no_log: true
     - name: Refactor content to be agnostic of the creator
       ansible.builtin.replace:
@@ -119,14 +123,14 @@
         regexp: "DEFINER=`root`@`%`"
         replace: ""
     - name: Saving all ConfigMaps
-      include_tasks: configurations.yaml
+      ansible.builtin.include_tasks: configurations.yaml
       with_items:
         - name: system-environment
           kind: ConfigMap
         - name: apicast-environment
           kind: ConfigMap
     - name: Saving all Secrets
-      include_tasks: configurations.yaml
+      ansible.builtin.include_tasks: configurations.yaml
       with_items:
         - name: system-smtp
           kind: Secret
@@ -151,7 +155,7 @@
   hosts: bastions
   tasks:
     - name: Scale all DeploymentConfigs to zero
-      include_tasks: scaling.yaml
+      ansible.builtin.include_tasks: scaling.yaml
       vars:
         replicas: 0
       with_items: "{{ deployments.elements }}"
@@ -160,7 +164,7 @@
   hosts: bastions
   tasks:
     - name: Import locally saved contents to the external MySQL
-      community.mysql.mysql_db:
+      ansible.mysql.mysql_db:
         login_host: "{{ external.mysql.other_host | default(external.mysql.host, true) }}"
         login_password: "{{ external.mysql.password }}"
         login_port: "{{ external.mysql.other_port | default(external.mysql.port, true) }}"
@@ -229,7 +233,7 @@
   hosts: bastions
   tasks:
     - name: Scale up all DeploymentConfigs
-      include_tasks: scaling.yaml
+      ansible.builtin.include_tasks: scaling.yaml
       vars:
         replicas: "{{ item.replicas | default(1, true) }}"
       with_items: "{{ deployments.elements | rejectattr('name', 'in', ['backend-redis', 'system-mysql', 'system-redis']) | list | reverse }}"
