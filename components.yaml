@@ -30,4 +30,4 @@
 
 - name: Create the Redis instances
   ansible.builtin.include_tasks: valkey.yaml
-  loop: {{ external.components.valkey }}
+  loop: "{{ external.components.valkey }}"
