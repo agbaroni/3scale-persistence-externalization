@@ -76,23 +76,25 @@ ansible_host: localhost
 project:
   threescale: "3scale" # Name of the namespace where the 3scale instance resides (the Operator may be in a different namespace)
 external:
-  components:
+  components: # If this section is missing the playbook expects already set up systems
     mysql:
       name: mysql
+      password: some_password
       project: dbms
       storage:
         size: 8Gi
-    postgresql:
-      name: postgresql
-      project: dbms
-      storage:
-        size: 4Gi
+      user: some_user
     valkey:
-      count: 3
-      name: valkey
-      project: dbms
-      storage:
-        size: 1Gi
+      - name: backend
+        password: some_password
+        project: dbms
+        storage:
+          size: 1Gi
+      - name: system
+        password: some_password
+        project: dbms
+        storage:
+          size: 1Gi
   mysql:
     database: some_database
     host: some_mysql_host # MySQL host reachable from OpenShift Pods
@@ -104,15 +106,15 @@ external:
   redis:
     backend:
       queues:
-        host: some_redis0_host
+        host: some_redis_backend_host
         port: 6379
         password: some_password
       storage:
-        host: some_redis1_host
+        host: some_redis_backend_host
         port: 6379
         password: some_password
     system:
-      host: some_redis2_host
+      host: some_redis_system_host
       port: 6379
       password: some_password
 ```
