@@ -61,10 +61,11 @@
         namespace: "{{ project.threescale }}"
         pod: "{{ pods['MySQL'].metadata.name }}"
       register: query_output
+      when: external.components is not defined
     - name: Stop if the test query fails
       ansible.builtin.fail:
         msg: "Connection attempt to external MySQL failed"
-      when: query_output.rc != 0
+      when: external.components is not defined and query_output.rc != 0
 
 - name: Save all information to handle a potential recovery
   hosts: bastions

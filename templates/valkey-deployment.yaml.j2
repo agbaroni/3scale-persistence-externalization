@@ -3,18 +3,18 @@ kind: Deployment
 apiVersion: apps/v1
 metadata:
   labels:
-    app: {{ external.components.valkey.name }}
-  name: {{ external.components.valkey.name }}
-  namespace: {{ external.components.valkey.project }}
+    app: valkey-{{ item.name }}
+  name: valkey-{{ item.name }}
+  namespace: {{ item.project }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      deployment: {{ external.components.valkey.name }}
+      app: valkey-{{ item.name }}
   template:
     metadata:
       labels:
-        deployment: {{ external.components.valkey.name }}
+        app: valkey-{{ item.name }}
     spec:
       restartPolicy: Always
       serviceAccountName: backend-redis-external
@@ -62,14 +62,14 @@ spec:
               mountPath: /etc/redis.d/
           terminationMessagePolicy: File
           image: 'registry.redhat.io/rhel9/redis-7'
-      serviceAccount: {{ external.components.valkey.name }}
+      serviceAccount: valkey-{{ item.name }}
       volumes:
         - name: data
           persistentVolumeClaim:
-            claimName: {{ external.components.valkey.name }}
+            claimName: valkey-{{ item.name }}
         - name: config
           configMap:
-            name: {{ external.components.valkey.name }}
+            name: valkey-{{ item.name }}
             items:
               - key: redis.conf
                 path: redis.conf

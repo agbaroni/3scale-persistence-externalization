@@ -19,15 +19,15 @@ spec:
       containers:
         - env:
             - name: MYSQL_ROOT_PASSWORD
-              value: {{ external.mysql.password }}
+              value: {{ external.components.mysql.password }}
             - name: MYSQL_DATABASE
-              value: {{ external.mysql.database }}
+              value: {{ external.components.mysql.database }}
             - name: MYSQL_ROOT_HOST
               value: "%"
             - name: MYSQL_USER
-              value: {{ external.mysql.user }}
+              value: {{ external.components.mysql.user }}
             - name: MYSQL_PASSWORD
-              value: {{ external.mysql.password }}
+              value: {{ external.components.mysql.password }}
           image: mysql:8.0
           args:
             - "--skip-name-resolve"

@@ -13,8 +13,11 @@
         "restore.yaml": "ansible",
         "rollback.yaml": "ansible",
         "scaling.yaml": "ansible",
+        "valkey.yaml": "ansible",
+        "valkey-cm.yaml.j2": "ansible-jinja",
         "valkey-deployment.yaml.j2": "ansible-jinja",
         "valkey-pvc.yaml.j2": "ansible-jinja",
+        "valkey-sa.yaml.j2": "ansible-jinja",
         "valkey-service.yaml.j2": "ansible-jinja"
     }
 }

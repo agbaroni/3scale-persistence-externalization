@@ -3,13 +3,13 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   labels:
-    app: {{ external.components.valkey.name }}
-  name: {{ external.components.valkey.name }}
-  namespace: {{ external.components.valkey.project }}
+    app: valkey-{{ item.name }}
+  name: valkey-{{ item.name }}
+  namespace: {{ item.project }}
 spec:
   accessModes:
   - ReadWriteOnce
   resources:
     requests:
-      storage: {{ external.components.valkey.storage.size }}
+      storage: {{ item.storage.size }}
   volumeMode: Filesystem
