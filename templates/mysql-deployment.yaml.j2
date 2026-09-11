@@ -21,7 +21,7 @@ spec:
             - name: MYSQL_ROOT_PASSWORD
               value: {{ external.components.mysql.password }}
             - name: MYSQL_DATABASE
-              value: {{ external.components.mysql.database }}
+              value: {{ external.mysql.database }}
             - name: MYSQL_ROOT_HOST
               value: "%"
             - name: MYSQL_USER
