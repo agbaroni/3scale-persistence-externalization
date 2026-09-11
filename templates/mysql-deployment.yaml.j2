@@ -28,7 +28,7 @@ spec:
               value: {{ external.components.mysql.user }}
             - name: MYSQL_PASSWORD
               value: {{ external.components.mysql.password }}
-          image: mysql:8.0
+          image: registry.redhat.io/rhel9/mysql-84
           args:
             - "--skip-name-resolve"
             - "--default-authentication-plugin=mysql_native_password"
