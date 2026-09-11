@@ -35,7 +35,7 @@ spec:
                 - container-entrypoint
                 - bash
                 - '-c'
-                - redis-cli set liveness-probe "`date`" | grep OK
+                - redis-cli -a '{{ item.password }}' set liveness-probe "`date`" | grep OK
             initialDelaySeconds: 10
             timeoutSeconds: 1
             periodSeconds: 30
