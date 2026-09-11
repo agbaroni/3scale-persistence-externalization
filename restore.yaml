@@ -25,7 +25,7 @@
   kubernetes.core.k8s_cp:
     local_path: "{{ directory.backup }}/system-mysql.sql"
     namespace: "{{ external.components.mysql.project }}"
-    pod: "{{ mysql_pod.resources[0] }}"
+    pod: "{{ mysql_pod.resources[0].metadata.name }}"
     remote_path: /tmp/system-mysql.sql
     state: to_pod
 
