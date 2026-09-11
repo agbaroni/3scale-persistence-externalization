@@ -17,7 +17,7 @@ spec:
         app: valkey-{{ item.name }}
     spec:
       restartPolicy: Always
-      serviceAccountName: backend-redis-external
+      serviceAccountName: valkey-{{ item.name }}
       schedulerName: default-scheduler
       terminationGracePeriodSeconds: 30
       securityContext: {}
