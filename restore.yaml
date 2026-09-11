@@ -34,7 +34,6 @@
     command:
       - /bin/bash
       - -c
-      - >-
-        "mysql -u{{ external.mysql.user }} -p'{{ external.mysql.password }}' -D{{ external.mysql.database }} < /tmp/system-mysql.sql"
+      - mysql -u{{ external.mysql.user }} -p'{{ external.mysql.password }}' -D{{ external.mysql.database }} < /tmp/system-mysql.sql
     namespace: "{{ external.components.mysql.project }}"
     pod: "{{ external.components.mysql.name }}"
