@@ -12,6 +12,10 @@ To run this playbook, the `mysql` command must be present on the machines where 
 - kubernetes
 - openshift
 
+### Setting up a local environment
+
+If you don't have Ansible already installed, you can install it and its dependencies:
+
 ## Configuration
 
 The configuration resides in the `host_vars` and `group_vars` directories; these define the `bastions` group, which contains all hosts identified as bastions for their respective OpenShift clusters.

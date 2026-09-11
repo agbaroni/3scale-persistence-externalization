@@ -4,7 +4,7 @@
   tasks:
     - name: Creating backup directory
       ansible.builtin.file:
-        mode: '0400'
+        mode: '0700'
         path: "{{ directory.backup }}"
         state: directory
 
