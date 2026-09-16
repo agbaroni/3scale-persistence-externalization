@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app: valkey-{{ item.name }}
+  name: valkey-{{ item.name }}
+  namespace: {{ item.project }}
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ item.storage.size }}
+  volumeMode: Filesystem

@@ -1,0 +1,8 @@
+- name: Scaling up all replicas
+  hosts: bastions
+  tasks:
+    - name: Scale all up DeploymentConfigs
+      ansible.builtin.include_tasks: scaling.yaml
+      vars:
+        replicas: 0
+      with_items: "{{ deployments.elements }}"

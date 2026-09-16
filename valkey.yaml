@@ -1,0 +1,24 @@
+- name: Create the Redis configuration
+  kubernetes.core.k8s:
+    state: present
+    resource_definition: "{{ lookup('template', 'valkey-cm.yaml.j2') }}"
+
+- name: Create the Redis configuration
+  kubernetes.core.k8s:
+    state: present
+    resource_definition: "{{ lookup('template', 'valkey-sa.yaml.j2') }}"
+
+- name: Create the Redis volume
+  kubernetes.core.k8s:
+    state: present
+    resource_definition: "{{ lookup('template', 'valkey-pvc.yaml.j2') }}"
+
+- name: Create the Redis instance
+  kubernetes.core.k8s:
+    state: present
+    resource_definition: "{{ lookup('template', 'valkey-deployment.yaml.j2') }}"
+
+- name: Create the Redis service
+  kubernetes.core.k8s:
+    state: present
+    resource_definition: "{{ lookup('template', 'valkey-service.yaml.j2') }}"

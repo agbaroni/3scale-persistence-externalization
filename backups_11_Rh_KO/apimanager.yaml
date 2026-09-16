@@ -1,0 +1,137 @@
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  annotations: {apps.3scale.net/apimanager-confirmed-requirements-version: '3041506796',
+    apps.3scale.net/apimanager-threescale-version: 2.15.5, apps.3scale.net/threescale-operator-version: 0.12.5}
+  creationTimestamp: '2026-09-10T15:31:21Z'
+  generation: 1
+  managedFields:
+  - apiVersion: apps.3scale.net/v1alpha1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:spec:
+        .: {}
+        f:apicast:
+          .: {}
+          f:managementAPI: {}
+          f:openSSLVerify: {}
+          f:productionSpec:
+            .: {}
+            f:httpsProxy: {}
+            f:logLevel: {}
+            f:replicas: {}
+          f:registryURL: {}
+          f:responseCodes: {}
+          f:stagingSpec:
+            .: {}
+            f:replicas: {}
+        f:appLabel: {}
+        f:backend:
+          .: {}
+          f:cronSpec:
+            .: {}
+            f:replicas: {}
+          f:listenerSpec:
+            .: {}
+            f:replicas: {}
+          f:workerSpec:
+            .: {}
+            f:replicas: {}
+        f:monitoring:
+          .: {}
+          f:enabled: {}
+        f:resourceRequirementsEnabled: {}
+        f:system:
+          .: {}
+          f:appSpec:
+            .: {}
+            f:replicas: {}
+          f:fileStorage:
+            .: {}
+            f:persistentVolumeClaim:
+              .: {}
+              f:storageClassName: {}
+          f:searchdSpec: {}
+          f:sidekiqSpec:
+            .: {}
+            f:replicas: {}
+          f:sphinxSpec: {}
+        f:tenantName: {}
+        f:wildcardDomain: {}
+        f:zync:
+          .: {}
+          f:appSpec:
+            .: {}
+            f:replicas: {}
+          f:queSpec:
+            .: {}
+            f:replicas: {}
+    manager: config-policy-controller
+    operation: Update
+    time: '2026-09-10T15:31:21Z'
+  - apiVersion: apps.3scale.net/v1alpha1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:metadata:
+        f:annotations:
+          .: {}
+          f:apps.3scale.net/apimanager-confirmed-requirements-version: {}
+          f:apps.3scale.net/apimanager-threescale-version: {}
+          f:apps.3scale.net/threescale-operator-version: {}
+    manager: manager
+    operation: Update
+    time: '2026-09-10T15:31:21Z'
+  - apiVersion: apps.3scale.net/v1alpha1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:status:
+        .: {}
+        f:conditions: {}
+        f:deployments:
+          .: {}
+          f:ready: {}
+    manager: manager
+    operation: Update
+    subresource: status
+    time: '2026-09-11T14:43:37Z'
+  name: apimanager
+  namespace: 3scale
+  resourceVersion: '3042490637'
+  uid: 961b59de-269f-4181-be1c-f26fd5854c68
+spec:
+  apicast:
+    managementAPI: status
+    openSSLVerify: false
+    productionSpec: {httpsProxy: 'http://proxy.rgs.mef.gov.it:80', logLevel: debug,
+      replicas: 1}
+    registryURL: http://apicast-staging:8090/policies
+    responseCodes: true
+    stagingSpec: {replicas: 1}
+  appLabel: 3scale-api-management
+  backend:
+    cronSpec: {replicas: 1}
+    listenerSpec: {replicas: 1}
+    workerSpec: {replicas: 1}
+  monitoring: {enabled: true}
+  resourceRequirementsEnabled: false
+  system:
+    appSpec: {replicas: 1}
+    fileStorage:
+      persistentVolumeClaim: {storageClassName: ocs-storagecluster-cephfs}
+    searchdSpec: {}
+    sidekiqSpec: {replicas: 1}
+    sphinxSpec: {}
+  tenantName: 3scale
+  wildcardDomain: apps.ocp4.test.rgs.mef.gov.it
+  zync:
+    appSpec: {replicas: 1}
+    queSpec: {replicas: 1}
+status:
+  conditions:
+  - {lastTransitionTime: '2026-09-10T15:31:22Z', status: 'False', type: Available}
+  - {message: All requirements for the current version are met, reason: PreflightsPass,
+    status: 'True', type: Preflights}
+  deployments:
+    ready: [apicast-production, apicast-staging, backend-cron, backend-listener, backend-redis,
+      backend-worker, system-app, system-memcache, system-mysql, system-redis, system-searchd,
+      system-sidekiq, zync, zync-database, zync-que]

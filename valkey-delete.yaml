@@ -1,0 +1,39 @@
+- name: Delete Valkey deployment
+  kubernetes.core.k8s:
+    api_version: apps/v1
+    kind: Deployment
+    name: "valkey-{{ item.name }}"
+    namespace: "{{ item.project }}"
+    state: absent
+
+- name: Delete Valkey service
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Service
+    name: "valkey-{{ item.name }}"
+    namespace: "{{ item.project }}"
+    state: absent
+
+- name: Delete Valkey PVC
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: PersistentVolumeClaim
+    name: "valkey-{{ item.name }}"
+    namespace: "{{ item.project }}"
+    state: absent
+
+- name: Delete Valkey ConfigMap
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: ConfigMap
+    name: "valkey-{{ item.name }}"
+    namespace: "{{ item.project }}"
+    state: absent
+
+- name: Delete Valkey ServiceAccount
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: ServiceAccount
+    name: "valkey-{{ item.name }}"
+    namespace: "{{ item.project }}"
+    state: absent

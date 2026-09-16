@@ -1,0 +1,65 @@
+# 3scale Persistence Externalization
+
+Playbook Ansible per esternalizzare i DB di 3scale (MySQL system, Redis backend/system, PostgreSQL zync) dall'operatore verso deployment indipendenti nel cluster OpenShift. Prerequisito per l'upgrade a 3scale 2.16.
+
+## Setup ambiente
+
+```bash
+python3.12 -m venv env
+source env/bin/activate
+pip install pip --upgrade
+pip install ansible ansible-lint
+pip install PyMySQL kubernetes openshift
+```
+
+> Il virtualenv va riattivato ad ogni sessione con `source env/bin/activate`.
+
+## Configurazione
+
+Editare `inventory/host_vars/bastion0.yaml` con i parametri dell'ambiente:
+
+- `project.threescale` — namespace OpenShift dove risiede 3scale
+- `external.components` — se presente, il playbook crea i DB nel cluster; se assente, si aspetta un MySQL esterno già raggiungibile
+- `external.components.mysql.password` e `external.mysql.password` — devono essere identiche alla password del DB interno di 3scale (questo permette al rollback di ripristinare i secret senza backup delle credenziali)
+- `external.mysql.other_host` — host MySQL raggiungibile dal bastion, usato per l'import del dump
+- `external.redis.*` — coordinate di connessione ai Valkey esterni
+
+Editare `inventory/group_vars/bastions.yaml` per:
+
+- `deployments.elements` — lista dei deployment da scalare; l'ordine è rilevante perché lo scale-up avviene in ordine inverso
+- `deployments.scaling_timeout` — timeout in secondi per ogni operazione di scaling
+
+## Esecuzione
+
+```bash
+source env/bin/activate
+ansible-playbook main.yaml
+```
+
+## Rollback
+
+```bash
+ansible-playbook rollback.yaml
+```
+
+Il rollback ripristina i secret agli host interni originali, chiede conferma interattiva prima di eliminare i DB esterni, aggiorna la CR `APIManager` e ri-scala i deployment.
+
+## Modifiche rispetto al repository upstream
+
+### Fix critici
+
+**`configurations.yaml`** — il task originale recuperava il primo oggetto del namespace senza filtrare per nome, salvando l'oggetto sbagliato. Aggiunto filtro per nome e corretto il formato di salvataggio.
+
+**`templates/mysql-service.yaml.j2`** — selector errato causava assenza di endpoint nel Service. Corretto.
+
+**`restore.yaml`** — il task di import usava il nome statico del Deployment come nome pod. Corretti il riferimento al pod, la sintassi del comando e aggiunto retry con attesa per gestire il tempo di bootstrap di MySQL.
+
+### Miglioramenti
+
+**`inventory/group_vars/bastions.yaml`** — corretto l'ordine di `system-sidekiq` e `system-app` nella lista dei deployment per evitare timeout durante lo scale-up.
+
+**`rollback.yaml`** — riscritto da zero: ripristina i secret, elimina interattivamente i DB esterni e ri-scala i deployment in ordine corretto.
+
+**`valkey-delete.yaml`** — nuovo file con i task per l'eliminazione delle risorse Valkey, usato dal rollback.
+
+**`main.yaml`** — aggiunto `backend-redis` alla lista dei Secret salvati in backup.

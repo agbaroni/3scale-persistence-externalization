@@ -10,6 +10,23 @@ To run this playbook, the `mysql` command must be present on the machines where 
 
 - PyMySQL
 - kubernetes
+- openshift
+
+### Setting up a local environment
+
+If you don't have Ansible already installed, you can install it and its dependencies:
+
+```bash
+python3 -m venv env
+
+source env/bin/activate
+
+pip install pip --upgrade
+
+pip install ansible
+
+pip install PyMySQL kubernetes openshift
+```
 
 ## Configuration
 
@@ -75,6 +92,25 @@ ansible_host: localhost
 project:
   threescale: "3scale" # Name of the namespace where the 3scale instance resides (the Operator may be in a different namespace)
 external:
+  components: # If this section is missing the playbook expects already set up systems
+    mysql:
+      name: mysql
+      password: some_password
+      project: dbms
+      storage:
+        size: 8Gi
+      user: some_user
+    valkey:
+      - name: backend
+        password: some_password
+        project: dbms
+        storage:
+          size: 1Gi
+      - name: system
+        password: some_password
+        project: dbms
+        storage:
+          size: 1Gi
   mysql:
     database: some_database
     host: some_mysql_host # MySQL host reachable from OpenShift Pods
@@ -86,15 +122,15 @@ external:
   redis:
     backend:
       queues:
-        host: some_redis0_host
+        host: some_redis_backend_host
         port: 6379
         password: some_password
       storage:
-        host: some_redis1_host
+        host: some_redis_backend_host
         port: 6379
         password: some_password
     system:
-      host: some_redis2_host
+      host: some_redis_system_host
       port: 6379
       password: some_password
 ```
@@ -105,4 +141,12 @@ Once the configuration is customized, you can run the playbook as follows:
 
 ```bash
 ansible-playbook main.yaml
+```
+
+## Rolling back the externalization
+
+If you need to revert the persistence externalization, you can run the other playbook as follows:
+
+```bash
+ansible-playbook rollback.yaml
 ```

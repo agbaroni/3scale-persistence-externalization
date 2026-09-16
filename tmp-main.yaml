@@ -123,6 +123,20 @@
         path: "{{ directory.backup }}/system-mysql.sql"
         regexp: "DEFINER=`root`@`%`"
         replace: ""
+    # - name: Extracting SystemApp (database) contents
+    #   kubernetes.core.k8s_exec:
+    #     command: >
+    #       pg_dump -U system -d system -F c -b -v -f /tmp/db_dump.backup
+    #     namespace: "{{ project.threescale }}"
+    #     pod: "{{ pods['PostgreSQL'].metadata.name }}"
+    #   register: system_app_dump
+    # - name: Saving SystemApp (database) contents locally
+    #   kubernetes.core.k8s_cp:
+    #     local_path: "{{ directory.backup }}/db_dump.backup"
+    #     namespace: "{{ project.threescale }}"
+    #     pod: "{{ pods['PostgreSQL'].metadata.name }}"
+    #     remote_path: /tmp/db_dump.backup
+    #     state: from_pod
     - name: Saving all ConfigMaps
       ansible.builtin.include_tasks: configurations.yaml
       with_items:
@@ -146,8 +160,6 @@
         - name: system-recaptcha
           kind: Secret
         - name: system-redis
-          kind: Secret
-        - name: backend-redis
           kind: Secret
         - name: zync
           kind: Secret
@@ -211,7 +223,6 @@
             namespace: "{{ project.threescale }}"
           stringData:
             URL: "redis://:{{ external.redis.system.password }}@{{ external.redis.system.host }}:{{ external.redis.system.port }}"
-        state: patched
     - name: Updating connection parameters for Redis (backend)
       kubernetes.core.k8s:
         definition:
@@ -223,7 +234,6 @@
           stringData:
             REDIS_QUEUES_URL: "redis://:{{ external.redis.backend.queues.password }}@{{ external.redis.backend.queues.host }}:{{ external.redis.backend.queues.port }}"
             REDIS_STORAGE_URL: "redis://:{{ external.redis.backend.storage.password }}@{{ external.redis.backend.storage.host }}:{{ external.redis.backend.storage.port }}"
-        state: patched
 
 - name: Updating Operator resources
   hosts: bastions
@@ -234,7 +244,7 @@
           apiVersion: apps.3scale.net/v1alpha1
           kind: APIManager
           metadata:
-            name: "{{ apimanager.metadata.name }}"
+            name: apimanager
             namespace: "{{ project.threescale }}"
           spec:
             externalComponents:

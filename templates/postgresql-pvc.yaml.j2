@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app: postgresql
+  name: {{ external.components.postgresql.name }}
+  namespace: {{ external.components.postgresql.project }}
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ external.components.postgresql.storage.size }}
+  volumeMode: Filesystem
