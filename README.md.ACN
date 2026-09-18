@@ -5,15 +5,16 @@ Playbook Ansible per esternalizzare i DB di 3scale (MySQL system, Redis backend/
 ## Setup ambiente
 
 ```bash
-python3.12 -m venv env
+python3.12 -m venv env --copies #Il flag --copies copia i file Python invece di usare symlink, evitando il problema del path.
 source env/bin/activate
 pip install pip --upgrade
 pip install ansible ansible-lint
 pip install PyMySQL kubernetes openshift
 ```
+> **Attenzione:** il virtualenv è legato al path assoluto dove viene creato. Se il repository viene clonato in una directory diversa, eliminare `env/` e ricrearla con `python3.12 -m venv env --copies` (il flag `--copies` evita problemi di symlink).
 
 > Il virtualenv va riattivato ad ogni sessione con `source env/bin/activate`.
-
+> Per uscire dal virtualenv lancia `deactivate`
 ## Configurazione
 
 Editare `inventory/host_vars/bastion0.yaml` con i parametri dell'ambiente:
