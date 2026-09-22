@@ -5,37 +5,77 @@ Playbook Ansible per esternalizzare i DB di 3scale (MySQL system, Redis backend/
 ## Setup ambiente
 
 ```bash
-python3.12 -m venv env --copies #Il flag --copies copia i file Python invece di usare symlink, evitando il problema del path.
+python3.12 -m venv env --copies
 source env/bin/activate
 pip install pip --upgrade
 pip install ansible ansible-lint
 pip install PyMySQL kubernetes openshift
 ```
+
 > **Attenzione:** il virtualenv è legato al path assoluto dove viene creato. Se il repository viene clonato in una directory diversa, eliminare `env/` e ricrearla con `python3.12 -m venv env --copies` (il flag `--copies` evita problemi di symlink).
 
-> Il virtualenv va riattivato ad ogni sessione con `source env/bin/activate`.
-> Per uscire dal virtualenv lancia `deactivate`
+> Il virtualenv va riattivato ad ogni sessione con `source env/bin/activate`. Per uscire: `deactivate`.
+
 ## Configurazione
 
-Editare `inventory/host_vars/bastion0.yaml` con i parametri dell'ambiente:
+Prima di eseguire il playbook è necessario adattare due file all'ambiente target.
 
-- `project.threescale` — namespace OpenShift dove risiede 3scale
-- `external.components` — se presente, il playbook crea i DB nel cluster; se assente, si aspetta un MySQL esterno già raggiungibile
-- `external.components.mysql.password` e `external.mysql.password` — devono essere identiche alla password del DB interno di 3scale (questo permette al rollback di ripristinare i secret senza backup delle credenziali)
-- `external.mysql.other_host` — host MySQL raggiungibile dal bastion, usato per l'import del dump
-- `external.redis.*` — coordinate di connessione ai Valkey esterni
+### `inventory/group_vars/bastions.yaml`
 
-Editare `inventory/group_vars/bastions.yaml` per:
-
-- `deployments.elements` — lista dei deployment da scalare; l'ordine è rilevante perché lo scale-up avviene in ordine inverso
 - `deployments.scaling_timeout` — timeout in secondi per ogni operazione di scaling
+- `deployments.elements` — lista dei deployment da scalare. **L'ordine è rilevante** perché lo scale-up avviene in ordine inverso. Verificare che:
+  - `system-sidekiq` preceda `system-app` (sidekiq attende che system-app sia raggiungibile)
+  - Il deployment dell'operatore abbia il `namespace:` corretto (può differire dal namespace 3scale):
+```yaml
+  cat inventory/group_vars/bastions.yaml
+directory:
+  backup: backups
+external:
+  mysql:
+    test_query: "SELECT 1"
+deployments:
+  scaling_timeout: 600
+  elements:
+    - description: 3scale operator controller manager
+      kind: Deployment
+      name: threescale-operator-controller-manager-v2
+      namespace: 3scale-212                                         ### MODIFICA QUI
+```
+
+### `inventory/host_vars/bastion0.yaml`
+
+Questo file contiene tutte le configurazioni specifiche dell'ambiente. Il namespace di 3scale compare in **più punti** — verificare che sia allineato ovunque:
+
+| Parametro | Descrizione |
+|---|---|
+| `project.threescale` | Namespace OpenShift dove risiede 3scale |
+| `external.components.mysql.project` | Namespace dove creare il MySQL esterno |
+| `external.components.valkey[*].project` | Namespace dove creare le istanze Valkey |
+| `external.mysql.host` | FQDN del Service MySQL — contiene il namespace: `mysql.<namespace>.svc.cluster.local` |
+| `external.mysql.other_host` | Host MySQL raggiungibile dal bastion (tipicamente `127.0.0.1`) |
+| `external.redis.backend.queues.host` | FQDN del Service Valkey backend — contiene il namespace: `valkey-backend.<namespace>.svc.cluster.local` |
+| `external.redis.backend.storage.host` | FQDN del Service Valkey backend — contiene il namespace |
+| `external.redis.system.host` | FQDN del Service Valkey system — contiene il namespace: `valkey-system.<namespace>.svc.cluster.local` |
+
+> **Importante:** `external.components.mysql.password` e `external.mysql.password` devono essere identiche alla password root del DB MySQL interno di 3scale. Questo permette al rollback di ripristinare i secret senza backup delle credenziali.
+
+> Se `external.components` è presente, il playbook crea i DB nel cluster. Se assente, si aspetta un MySQL esterno già raggiungibile.
 
 ## Esecuzione
 
 ```bash
-source env/bin/activate
 ansible-playbook main.yaml
 ```
+
+## Riprendere il playbook da un task specifico
+
+In caso di interruzione, il playbook può essere ripreso da un punto specifico:
+
+```bash
+ansible-playbook main.yaml --start-at-task="<nome del task>" -e "{\"apimanager\": {\"metadata\": {\"name\": \"$(oc get apimanager -n <namespace> -o jsonpath='{.items[0].metadata.name}')\"}}}"'
+```
+
+> **Attenzione:** `--start-at-task` funziona solo con task statici. I task definiti in file inclusi dinamicamente (come `components.yaml`, `restore.yaml`) non sono raggiungibili direttamente — in questo caso usare il nome del task chiamante, ad esempio `"Create all components"` o `"Restore all components"`.
 
 ## Rollback
 
@@ -57,7 +97,7 @@ Il rollback ripristina i secret agli host interni originali, chiede conferma int
 
 ### Miglioramenti
 
-**`inventory/group_vars/bastions.yaml`** — corretto l'ordine di `system-sidekiq` e `system-app` nella lista dei deployment per evitare timeout durante lo scale-up.
+**`inventory/group_vars/bastions.yaml`** — corretto l'ordine dei deployment nella lista per evitare timeout durante lo scale-up: `system-sidekiq` prima di `system-app`, `backend-redis` prima di `backend-cron`.
 
 **`rollback.yaml`** — riscritto da zero: ripristina i secret, elimina interattivamente i DB esterni e ri-scala i deployment in ordine corretto.
 
