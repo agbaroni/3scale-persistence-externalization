@@ -6,7 +6,11 @@ metadata:
   namespace: {{ item.project }}
 data:
   redis.conf: |
+{% if item.password %}
     requirepass {{ item.password }}
+{% else %}
+    protected-mode no
+{% endif %}
 
     port 6379
 
