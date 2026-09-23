@@ -13,4 +13,4 @@ spec:
     targetPort: {{ external.mysql.port }}
     protocol: TCP
   selector:
-    deployment: {{ external.components.mysql.name }}
+    app: {{ external.components.mysql.name }}

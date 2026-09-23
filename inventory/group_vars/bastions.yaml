@@ -16,12 +16,12 @@ deployments:
     - description: APICast (staging)
       kind: Deployment
       name: apicast-staging
-    - description: System (app)
-      kind: Deployment
-      name: system-app
     - description: System (sidekiq)
       kind: Deployment
       name: system-sidekiq
+    - description: System (app)
+      kind: Deployment
+      name: system-app
     - description: Listener (backend)
       kind: Deployment
       name: backend-listener

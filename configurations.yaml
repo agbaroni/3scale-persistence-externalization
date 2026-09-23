@@ -2,6 +2,7 @@
   kubernetes.core.k8s_info:
     api_version: v1
     kind: "{{ item.kind }}"
+    name: "{{ item.name }}"
     namespace: "{{ project.threescale }}"
   register: config_map_data
 - name: "Saving {{ item.kind }} '{{ item.name }}' contents"
