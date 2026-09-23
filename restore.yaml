@@ -31,7 +31,6 @@
   retries: 10
   delay: 30
   until: mysql_ready.rc == 0
-
 - name: Copying System (database) contents remotely
   kubernetes.core.k8s_cp:
     local_path: "{{ directory.backup }}/system-mysql.sql"
