@@ -5,8 +5,16 @@
     name: "{{ item.name }}"
     namespace: "{{ project.threescale }}"
   register: config_map_data
+
 - name: "Saving {{ item.kind }} '{{ item.name }}' contents"
+  vars:
+    clean_metadata:
+      name: "{{ config_map_data.resources[0].metadata.name }}"
+      namespace: "{{ config_map_data.resources[0].metadata.namespace }}"
+      labels: "{{ config_map_data.resources[0].metadata.labels | default({}) }}"
+    clean_resource: "{{ config_map_data.resources[0] | combine({'metadata': clean_metadata}) }}"
   ansible.builtin.copy:
-    content: "{{ config_map_data.resources[0] | to_yaml }}"
+    content: "{{ clean_resource | dict2items | rejectattr('key', 'in', ['managedFields', 'status']) | items2dict | to_yaml }}"
     dest: "{{ directory.backup }}/{{ item.name }}.yaml"
+    mode: '0400'
   no_log: true

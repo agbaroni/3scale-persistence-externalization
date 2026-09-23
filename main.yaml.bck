@@ -161,8 +161,6 @@
           kind: Secret
         - name: system-redis
           kind: Secret
-        - name: backend-redis
-          kind: Secret
         - name: zync
           kind: Secret
         - name: system-master-apicast
@@ -224,8 +222,7 @@
             name: system-redis
             namespace: "{{ project.threescale }}"
           stringData:
-            URL: "redis://{% if external.redis.system.password %}:{{ external.redis.system.password }}@{% endif %}{{ external.redis.system.host }}:{{ external.redis.system.port }}"
-        state: patched
+            URL: "redis://:{{ external.redis.system.password }}@{{ external.redis.system.host }}:{{ external.redis.system.port }}"
     - name: Updating connection parameters for Redis (backend)
       kubernetes.core.k8s:
         definition:
@@ -235,9 +232,8 @@
             name: backend-redis
             namespace: "{{ project.threescale }}"
           stringData:
-            REDIS_QUEUES_URL: "redis://{% if external.redis.backend.queues.password %}:{{ external.redis.backend.queues.password }}@{% endif %}{{ external.redis.backend.queues.host }}:{{ external.redis.backend.queues.port }}"
-            REDIS_STORAGE_URL: "redis://{% if external.redis.backend.storage.password %}:{{ external.redis.backend.storage.password }}@{% endif %}{{ external.redis.backend.storage.host }}:{{ external.redis.backend.storage.port }}"
-        state: patched
+            REDIS_QUEUES_URL: "redis://:{{ external.redis.backend.queues.password }}@{{ external.redis.backend.queues.host }}:{{ external.redis.backend.queues.port }}"
+            REDIS_STORAGE_URL: "redis://:{{ external.redis.backend.storage.password }}@{{ external.redis.backend.storage.host }}:{{ external.redis.backend.storage.port }}"
 
 - name: Updating Operator resources
   hosts: bastions

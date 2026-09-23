@@ -21,6 +21,16 @@
       - "app={{ external.components.mysql.name }}"
   register: mysql_pod
 
+- name: Wait for MySQL to be ready
+  kubernetes.core.k8s_exec:
+    command:
+      bash -c 'mysql -h127.0.0.1 -u{{ external.mysql.user }} -p{{ external.mysql.password }} -e "SELECT 1"'
+    namespace: "{{ external.components.mysql.project }}"
+    pod: "{{ mysql_pod.resources[0].metadata.name }}"
+  register: mysql_ready
+  retries: 10
+  delay: 30
+  until: mysql_ready.rc == 0
 - name: Copying System (database) contents remotely
   kubernetes.core.k8s_cp:
     local_path: "{{ directory.backup }}/system-mysql.sql"
@@ -32,8 +42,10 @@
 - name: Importing System (database) contents
   kubernetes.core.k8s_exec:
     command:
-      - /bin/bash
-      - -c
-      - mysql -h127.0.0.1 -u{{ external.mysql.user }} -p'{{ external.mysql.password }}' -D{{ external.mysql.database }} < /tmp/system-mysql.sql
+      bash -c 'mysql -h127.0.0.1 -u{{ external.mysql.user }} -p{{ external.mysql.password }} -D{{ external.mysql.database }} < /tmp/system-mysql.sql'
     namespace: "{{ external.components.mysql.project }}"
-    pod: "{{ external.components.mysql.name }}"
+    pod: "{{ mysql_pod.resources[0].metadata.name }}"
+  register: import_result
+  retries: 10
+  delay: 30
+  until: import_result.rc == 0

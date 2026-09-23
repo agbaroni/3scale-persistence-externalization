@@ -25,10 +25,14 @@ spec:
             - name: MYSQL_ROOT_HOST
               value: "%"
             - name: MYSQL_USER
-              value: {{ external.mysql.other_user }}
+              value: {{ external.components.mysql.user }}
             - name: MYSQL_PASSWORD
-              value: {{ external.mysql.other_password }}
+              value: {{ external.components.mysql.password }}
           image: registry.redhat.io/rhel8/mysql-80
+          args:
+            - "--skip-name-resolve"
+            - "--default-authentication-plugin=mysql_native_password"
+            - "--authentication-policy=mysql_native_password"
           name: mysql
           ports:
             - containerPort: 3306

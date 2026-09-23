@@ -6,9 +6,11 @@ metadata:
   namespace: {{ item.project }}
 data:
   redis.conf: |
+{% if item.password %}
     requirepass {{ item.password }}
-
-    #protected-mode no
+{% else %}
+    protected-mode no
+{% endif %}
 
     port 6379
 
@@ -22,9 +24,6 @@ data:
 
     databases 16
 
-    #save 900 1
-    #save 300 10
-    #save 60 10000
     save ""
 
     stop-writes-on-bgsave-error yes

@@ -2,13 +2,13 @@ ansible_connection: local
 ansible_host: localhost
 ansible_python_interpreter: "{{ ansible_playbook_python }}"
 project:
-  threescale: "3scale"
+  threescale: "3scale-ocp5v"
 external:
   components:
     mysql:
       name: mysql
-      password: "Password123!"
-      project: dbms
+      password: " 0ZBiiQ38"
+      project: 3scale-ocp5v
       storage:
         size: 8Gi
       user: root
@@ -19,22 +19,24 @@ external:
     #     size: 4Gi
     valkey:
       - name: backend
-        password: "Pippo123!"
-        project: dbms
+        password: ""
+        project: 3scale-ocp5v
         storage:
           size: 1Gi
       - name: system
-        password: "Pippo123!"
-        project: dbms
+        password: ""
+        project: 3scale-ocp5v
         storage:
           size: 1Gi
   mysql:
-    database: testdb
-    host: mysql.dbms.svc.cluster.local
+    database: system
+    host: mysql.3scale-ocp5v.svc.cluster.local
     other_host: 127.0.0.1
-    password: "Password123!"
+    password: "0ZBiiQ38"
     port: 3306
     user: root
+    other_user: mysql
+    other_password: "0ZBiiQ38"
   # postgresql:
   #   database: testdb
   #   host: postgresql.dbms.svc.cluster.local
@@ -44,14 +46,14 @@ external:
   redis:
     backend:
       queues:
-        host: valkey-backend.dbms.svc.cluster.local
+        host: valkey-backend.3scale-ocp5v.svc.cluster.local
         port: 6379
-        password: "Pippo123!"
+        password: ""
       storage:
-        host: valkey-backend.dbms.svc.cluster.local
+        host: valkey-backend.3scale-ocp5v.svc.cluster.local
         port: 6379
-        password: "Pippo123!"
+        password: ""
     system:
-      host: valkey-system.dbms.svc.cluster.local
+      host: valkey-system.3scale-ocp5v.svc.cluster.local
       port: 6379
-      password: "Pippo123!"
+      password: ""
