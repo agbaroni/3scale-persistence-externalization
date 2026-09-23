@@ -6,6 +6,7 @@ metadata:
   namespace: {{ item.project }}
 data:
   redis.conf: |
+redis.conf: |-
     requirepass {{ item.password }}
 
     #protected-mode no
@@ -22,10 +23,9 @@ data:
 
     databases 16
 
-    #save 900 1
-    #save 300 10
-    #save 60 10000
-    save ""
+    save 900 1
+    save 300 10
+    save 60 10000
 
     stop-writes-on-bgsave-error yes
 
@@ -40,7 +40,7 @@ data:
     repl-diskless-sync no
     repl-disable-tcp-nodelay no
 
-    appendonly no
+    appendonly yes
     appendfilename "appendonly.aof"
     appendfsync everysec
     no-appendfsync-on-rewrite no
