@@ -81,6 +81,7 @@
     - name: Saving Redis (backend) contents
       kubernetes.core.k8s_cp:
         local_path: "{{ directory.backup }}/backend-redis-dump.rdb"
+        container: backend-redis
         namespace: "{{ project.threescale }}"
         pod: "{{ pods['Redis (backend)'].metadata.name }}"
         remote_path: /var/lib/redis/data/dump.rdb
@@ -88,6 +89,7 @@
     - name: Saving Redis (system) contents
       kubernetes.core.k8s_cp:
         local_path: "{{ directory.backup }}/system-redis-dump.rdb"
+        container: system-redis
         namespace: "{{ project.threescale }}"
         pod: "{{ pods['Redis (system)'].metadata.name }}"
         remote_path: /var/lib/redis/data/dump.rdb
@@ -96,6 +98,7 @@
       kubernetes.core.k8s_exec:
         command: >
           bash -c 'pg_dump zync_production'
+        container: postgresql
         namespace: "{{ project.threescale }}"
         pod: "{{ pods['Zync (database)'].metadata.name }}"
       register: zync_dump
@@ -109,6 +112,7 @@
       kubernetes.core.k8s_exec:
         command: >
           bash -c 'export MYSQL_PWD=${MYSQL_ROOT_PASSWORD}; mysqldump --single-transaction -hsystem-mysql -uroot system'
+        container: system-mysql
         namespace: "{{ project.threescale }}"
         pod: "{{ pods['MySQL'].metadata.name }}"
       register: system_dump

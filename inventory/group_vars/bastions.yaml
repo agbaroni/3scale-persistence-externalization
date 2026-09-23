@@ -9,7 +9,7 @@ deployments:
     - description: 3scale operator controller manager
       kind: Deployment
       name: threescale-operator-controller-manager-v2
-      namespace: 3scale-ocp5v
+      namespace: 3scale-ocp6v
     - description: APICast (production)
       kind: Deployment
       name: apicast-production
