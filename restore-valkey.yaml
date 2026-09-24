@@ -1,25 +1,17 @@
-# - name: Rename the original dump file
-#   kubernetes.core.k8s_exec:
-#     container: "{{ item.name }}-redis-external"
-#     command: >
-#       mv ${HOME}/data/dump.rdb ${HOME}/data/dump.rdb-old
-#     namespace: "{{ project.threescale }}"
-#     pod: "{{ item.name }}"
-
-# - name: Remove the original append file
-#   kubernetes.core.k8s_exec:
-#     container: "{{ item.name }}-redis-external"
-#     command: >
-#       mv ${HOME}/data/appendonly.aof ${HOME}/data/appendonly.aof-old
-#     namespace: "{{ project.threescale }}"
-#     pod: "{{ item.name }}"
+- name: "Retrieve Pod information"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    label_selectors:
+      - "app=valkey-{{ item.name }}"
+  register: vk_pod
 
 - name: Copy backup file to the Pod
   kubernetes.core.k8s_cp:
     container: "{{ item.name }}-redis-external"
     local_path: "{{ directory.backup }}/{{ item.name }}-redis.db"
-    namespace: "{{ external.components.mysql.project }}"
-    pod: "{{ mysql_pod.resources[0].metadata.name }}"
+    namespace: "{{ item.project }}"
+    pod: "{{ vk_pod }}"
     remote_path: /var/lib/redis/data/
     state: to_pod
 
@@ -29,13 +21,15 @@
       - redis-cli
       - BGREWRITEAOF
     container: "{{ item.name }}-redis-external"
-    namespace: "{{ external.components.mysql.project }}"
-    pod: "{{ mysql_pod.resources[0].metadata.name }}"
+    namespace: "{{ item.project }}"
+    pod: "{{ vk_pod }}"
 
 - name: Wait until AOF rewrite is not in progress
   kubernetes.core.k8s_exec:
+    container: "{{ item.name }}-redis-external"
     command:
-      - redis-cli info | grep aof_rewrite_in_progress
+      - bash -c 'redis-cli info | grep aof_rewrite_in_progress'
+    pod: "{{ vk_pod }}"
   register: aof_status
   until: aof_status.stdout.split(':')[1] | trim == "0"
   retries: 30
