@@ -259,7 +259,13 @@
                 redis: true
         state: patched
 
-- name: Scaling up all replicas
+- name: Scale up all ValKey Deployments
+  ansible.builtin.include_tasks: scaling.yaml
+  vars:
+    replicas: "{{ item.replicas | default(1, true) }}"
+  with_items: "{{ deployments.elements | selectattr('name', 'in', (external.components.valkey | map(attribute='name'))) }}"
+
+- name: Scaling up other replicas
   hosts: bastions
   tasks:
     - name: Scale up all DeploymentConfigs

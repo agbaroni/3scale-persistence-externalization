@@ -31,3 +31,13 @@
     container: "{{ item.name }}-redis-external"
     namespace: "{{ external.components.mysql.project }}"
     pod: "{{ mysql_pod.resources[0].metadata.name }}"
+
+- name: Wait until AOF rewrite is not in progress
+  kubernetes.core.k8s_exec:
+    command:
+      - redis-cli info | grep aof_rewrite_in_progress
+  register: aof_status
+  until: aof_status.stdout.split(':')[1] | trim == "0"
+  retries: 30
+  delay: 10
+  changed_when: false

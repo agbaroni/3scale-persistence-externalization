@@ -43,11 +43,11 @@
     valkey:
       phase: post
 
-- name: Scale up all Deployments
-  ansible.builtin.include_tasks: scaling.yaml
-  vars:
-    replicas: "{{ item.replicas | default(1, true) }}"
-  with_items: "{{ deployments.elements | selectattr('name', 'in', (external.components.valkey | map(attribute='name'))) }}"
+# - name: Scale up all Deployments
+#   ansible.builtin.include_tasks: scaling.yaml
+#   vars:
+#     replicas: "{{ item.replicas | default(1, true) }}"
+#   with_items: "{{ deployments.elements | selectattr('name', 'in', (external.components.valkey | map(attribute='name'))) }}"
 
 # - name: Create all append-only files
 #   ansible.builtin.include_tasks: restore-valkey-aof.yaml
