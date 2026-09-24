@@ -1,18 +1,3 @@
-# - name: Copying SystemApp (database) contents remotely
-#   kubernetes.core.k8s_cp:
-#     local_path: "{{ directory.backup }}/db_dump.backup"
-#     namespace: "{{ external.components.postgresql.project }}"
-#     pod: "{{ external.components.postgresql.name }}"
-#     remote_path: /tmp/db_dump.backup
-#     state: to_pod
-
-# - name: Importing SystemApp (database) contents
-#   kubernetes.core.k8s_exec:
-#     command: >
-#       pg_restore -v -h localhost -U postgres -d system /tmp/db_dump.backup
-#     namespace: "{{ external.components.postgresql.project }}"
-#     pod: "{{ external.components.postgresql.name }}"
-
 - name: "Retrieve MySQL Pod information"
   kubernetes.core.k8s_info:
     api_version: v1
@@ -39,3 +24,31 @@
       - mysql -h127.0.0.1 -u{{ external.mysql.user }} -p'{{ external.mysql.password }}' -D{{ external.mysql.database }} < /tmp/system-mysql.sql
     namespace: "{{ external.components.mysql.project }}"
     pod: "{{ external.components.mysql.name }}"
+
+- name: Restore all ValKey instances
+  ansible.builtin.include_tasks: restore-valkey.yaml
+  loop: "{{ external.components.valkey }}"
+
+- name: Scale the Deployment to zero
+  ansible.builtin.include_tasks: scaling.yaml
+  vars:
+    replicas: 0
+  with_items: "{{ item.name }}"
+
+- name: Create the Redis configuration
+  kubernetes.core.k8s:
+    state: patched
+    resource_definition: "{{ lookup('template', 'valkey-cm.yaml.j2') }}"
+  vars:
+    valkey:
+      phase: post
+
+- name: Scale up all Deployments
+  ansible.builtin.include_tasks: scaling.yaml
+  vars:
+    replicas: "{{ item.replicas | default(1, true) }}"
+  with_items: "{{ deployments.elements | selectattr('name', 'in', (external.components.valkey | map(attribute='name'))) }}"
+
+# - name: Create all append-only files
+#   ansible.builtin.include_tasks: restore-valkey-aof.yaml
+#   loop: "{{ external.components.valkey }}"

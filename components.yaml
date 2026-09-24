@@ -1,18 +1,3 @@
-# - name: Create the PostgreSQL volume
-#   kubernetes.core.k8s:
-#     state: present
-#     template: "{{ lookup('template', 'postgresql-pvc.yaml.j2') }}"
-
-# - name: Create the PostgreSQL instance
-#   kubernetes.core.k8s:
-#     state: present
-#     template: "{{ lookup('template', 'postgresql-deployment.yaml.j2') }}"
-
-# - name: Create the PostgreSQL service
-#   kubernetes.core.k8s:
-#     state: present
-#     template: "{{ lookup('template', 'postgresql-service.yaml.j2') }}"
-
 - name: Create the MySQL volume
   kubernetes.core.k8s:
     state: present
@@ -31,3 +16,6 @@
 - name: Create the Redis instances
   ansible.builtin.include_tasks: valkey.yaml
   loop: "{{ external.components.valkey }}"
+  vars:
+    valkey:
+      phase: pre

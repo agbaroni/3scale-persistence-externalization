@@ -12,11 +12,6 @@ external:
       storage:
         size: 8Gi
       user: root
-    # postgresql:
-    #   name: postgresql
-    #   project: dbms
-    #   storage:
-    #     size: 4Gi
     valkey:
       - name: backend
         password: "Pippo123!"
@@ -35,12 +30,6 @@ external:
     password: "Password123!"
     port: 3306
     user: root
-  # postgresql:
-  #   database: testdb
-  #   host: postgresql.dbms.svc.cluster.local
-  #   password: Password123!
-  #   port: 5432
-  #   user: user
   redis:
     backend:
       queues:

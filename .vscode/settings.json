@@ -11,6 +11,8 @@
         "postgresql-service.yaml.j2": "ansible-jinja",
         "resources.yaml": "ansible",
         "restore.yaml": "ansible",
+        "restore-valkey.yaml": "ansible",
+        "restore-valkey-aof.yaml": "ansible",
         "rollback.yaml": "ansible",
         "scaling.yaml": "ansible",
         "valkey.yaml": "ansible",

@@ -6,7 +6,6 @@ metadata:
   namespace: {{ item.project }}
 data:
   redis.conf: |
-redis.conf: |-
     requirepass {{ item.password }}
 
     #protected-mode no
@@ -23,9 +22,20 @@ redis.conf: |-
 
     databases 16
 
+{% if valkey.phase == 'pre' %}
+
+    save ""
+    appendonly no
+
+{% elif valkey.phase == 'post' %}
+
     save 900 1
     save 300 10
     save 60 10000
+
+    appendonly yes
+
+{% endif %}
 
     stop-writes-on-bgsave-error yes
 
@@ -40,7 +50,6 @@ redis.conf: |-
     repl-diskless-sync no
     repl-disable-tcp-nodelay no
 
-    appendonly yes
     appendfilename "appendonly.aof"
     appendfsync everysec
     no-appendfsync-on-rewrite no

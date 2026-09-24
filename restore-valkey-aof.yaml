@@ -1,0 +1,8 @@
+- name: Create the append-only file
+  kubernetes.core.k8s_exec:
+    command:
+      - redis-cli
+      - BGREWRITEAOF
+    container: "{{ item.name }}-redis-external"
+    namespace: "{{ external.components.mysql.project }}"
+    pod: "{{ mysql_pod.resources[0].metadata.name }}"

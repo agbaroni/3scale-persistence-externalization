@@ -1,0 +1,33 @@
+# - name: Rename the original dump file
+#   kubernetes.core.k8s_exec:
+#     container: "{{ item.name }}-redis-external"
+#     command: >
+#       mv ${HOME}/data/dump.rdb ${HOME}/data/dump.rdb-old
+#     namespace: "{{ project.threescale }}"
+#     pod: "{{ item.name }}"
+
+# - name: Remove the original append file
+#   kubernetes.core.k8s_exec:
+#     container: "{{ item.name }}-redis-external"
+#     command: >
+#       mv ${HOME}/data/appendonly.aof ${HOME}/data/appendonly.aof-old
+#     namespace: "{{ project.threescale }}"
+#     pod: "{{ item.name }}"
+
+- name: Copy backup file to the Pod
+  kubernetes.core.k8s_cp:
+    container: "{{ item.name }}-redis-external"
+    local_path: "{{ directory.backup }}/{{ item.name }}-redis.db"
+    namespace: "{{ external.components.mysql.project }}"
+    pod: "{{ mysql_pod.resources[0].metadata.name }}"
+    remote_path: /var/lib/redis/data/
+    state: to_pod
+
+- name: Create the append-only file
+  kubernetes.core.k8s_exec:
+    command:
+      - redis-cli
+      - BGREWRITEAOF
+    container: "{{ item.name }}-redis-external"
+    namespace: "{{ external.components.mysql.project }}"
+    pod: "{{ mysql_pod.resources[0].metadata.name }}"
