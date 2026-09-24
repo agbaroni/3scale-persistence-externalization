@@ -42,7 +42,7 @@ spec:
             successThreshold: 1
             failureThreshold: 3
           terminationMessagePath: /dev/termination-log
-          name: backend-redis-external
+          name: {{ item.name }}-redis-external
           livenessProbe:
             tcpSocket:
               port: 6379

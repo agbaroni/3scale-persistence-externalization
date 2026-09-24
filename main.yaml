@@ -80,6 +80,7 @@
         state: from_pod
     - name: Saving Redis (backend) contents
       kubernetes.core.k8s_cp:
+        container: backend-redis
         local_path: "{{ directory.backup }}/backend-redis-dump.rdb"
         namespace: "{{ project.threescale }}"
         pod: "{{ pods['Redis (backend)'].metadata.name }}"
@@ -87,6 +88,7 @@
         state: from_pod
     - name: Saving Redis (system) contents
       kubernetes.core.k8s_cp:
+        container: system-redis
         local_path: "{{ directory.backup }}/system-redis-dump.rdb"
         namespace: "{{ project.threescale }}"
         pod: "{{ pods['Redis (system)'].metadata.name }}"
@@ -94,6 +96,7 @@
         state: from_pod
     - name: Extracting Zync (database) contents
       kubernetes.core.k8s_exec:
+        container: postgresql
         command: >
           bash -c 'pg_dump zync_production'
         namespace: "{{ project.threescale }}"
@@ -107,6 +110,7 @@
       no_log: true
     - name: Extracting System (database) contents
       kubernetes.core.k8s_exec:
+        container: system-mysql
         command: >
           bash -c 'export MYSQL_PWD=${MYSQL_ROOT_PASSWORD}; mysqldump --single-transaction -hsystem-mysql -uroot system'
         namespace: "{{ project.threescale }}"

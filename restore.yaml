@@ -23,6 +23,7 @@
 
 - name: Copying System (database) contents remotely
   kubernetes.core.k8s_cp:
+    container: mysql
     local_path: "{{ directory.backup }}/system-mysql.sql"
     namespace: "{{ external.components.mysql.project }}"
     pod: "{{ mysql_pod.resources[0].metadata.name }}"
@@ -31,6 +32,7 @@
 
 - name: Importing System (database) contents
   kubernetes.core.k8s_exec:
+    container: mysql
     command:
       - /bin/bash
       - -c
